@@ -98,16 +98,12 @@ def generate_round_key(key):
     for bit in keyp:
         bitDrop.append(key[bit-1])
 
-    # print(bitDrop)
     left = bitDrop[:28]
     right = bitDrop[28:]
 
     shift_value = shift_table[0]
-    # print(left)
     left = left[shift_value:] + left[:shift_value]
-    print(right)
     right = right[shift_value:] + right[:shift_value]
-    print(right)
     concatKey = left + right
 
     round1_key = [concatKey[bit - 1] for bit in key_comp]
@@ -117,7 +113,6 @@ def generate_round_key(key):
 def pad_text(text):
     padding_length = 8 - (len(text) % 8)
     padding = chr(padding_length) * padding_length
-    # print(text)
     return text + padding
 
 
@@ -135,8 +130,6 @@ def expansion_permutation(input_bits):
 
 def xor_lists(list1, list2):
     result = []
-    # print(list1)
-    # print(list2)
     for a, b in zip(list1, list2):
         if a == b:
             result.append('0')
@@ -146,25 +139,17 @@ def xor_lists(list1, list2):
 
 
 def s_box(input):
-    # print(input)
     # Divide the input into 8 blocks of 6 bits each
     blocks = [input[i:i+6] for i in range(0, 48, 6)]
-    # print(blocks)
     result = []
 
     for i in range(8):
         block = blocks[i]
-        # print(block)
         row = int(block[0] + block[5], 2)
-        # print(row)
         column = int(block[1]+block[2]+block[3]+block[4], 2)
-        # print(column)
         value = sbox[i][row][column]
-        # print(value)
-        # print([int(b) for b in format(value, '04b')])
         result.extend([int(b) for b in format(value, '04b')])
 
-    # print(result)
     return result
 
 
@@ -181,32 +166,35 @@ def convertToBinaryC(Hex):
 def find_p_box(inputs, outputs):
 
     list = [[[]]]
-    y = []
+    list_indexs = []
     for i in range(len(outputs)):
-        temp = outputs[i]
-        k = []
-        for bit in range(len(temp)):
-            templist = []
-            for j in range(len(inputs[i])):
-                if temp[bit]==inputs[i][j]:
-                    templist.append(j)
-            k.append(templist)
-        y.append(k)
+        out = outputs[i]
+        tempList = []
+        listZero = []
+        listOne = []
+        for j in range(len(out)):
+            if inputs[i][j] == '0':
+                listZero.append(j)
+            else:
+                listOne.append(j)
+        for bit in range(len(out)):
+            if out[bit] == '0':
+                tempList.append(listZero)
+            else:
+                tempList.append(listOne)
+        list_indexs.append(tempList)
 
+    for item in list_indexs:
+        print(item)
 
-    # print(y)
+    listSub = list_indexs[0]
 
-    listSub = y[0]
-
-    print(outputs[13][17])
-    print(y[13][17])
-    for i in range(len(y)-1):
-        # print(y[i+1])
+    for i in range(len(list_indexs)-1):
         ll = []
-        for j in range(len(y[i+1])):
+        for j in range(len(list_indexs[i+1])):
             sub = []
             for element in set(listSub[j]):
-                if element in set(y[i+1][j]):
+                if element in set(list_indexs[i+1][j]):
                     sub.append(element)
             ll.append(sub)
 
@@ -230,30 +218,45 @@ def getInputs(key):
              ["HattaMo", "5974216034186B44"],
              ["khayeSa", "EA29302D74463545"],
              ["05753jj", "B1203330722B7A04"],
-             ["==j95697","38693B6824232D23"],
-             ['','1D1C0D0C4959590D']
+             ["==j95697","38693B6824232D231D1C0D0C4959590D"]
             ]
-
+    removeIndex = []
+    counter = 0
+    for item in list:
+        if len(item[1]) > 16:
+            removeIndex.append(counter)
+            blocksPlain = textwrap.wrap(item[0], 8)
+            blocksCipher = textwrap.wrap(item[1], 16)
+            num = len(blocksCipher)
+            for i in range(num):
+                p = ''
+                if len(blocksPlain) > i:
+                    p = blocksPlain[i]
+                c = blocksCipher[i]
+                test = [p, c]
+                list.append(test)
+            # print(list)
+    for remove in removeIndex:
+        list.pop(remove)
     #convert list to binary form
     binarylist = []
     for item in list:
-        # add padding to plainText
-        # print(item[0])
         if len(item[0]) < 8:
             plainPad = pad_text(item[0])
         elif len(item[0]) >= 8:
             item[0] = item[0][:8]
             plainPad = item[0]
-            # print("hooo")
-            # print(item[0])
-        # print("plain pad:")
-        # print(plainPad)
+
         binP = convertToBinaryP(plainPad)
-        # print((binP))
         binC = convertToBinaryC(item[1])
-        # print(showHex(binC))
         tempList = [binP, binC]
         binarylist.append(tempList)
+        counter += 1
+    # print(len(list))
+    # print(len(binarylist))
+    # for remove in removeIndex:
+    #     binarylist.pop(remove)
+    # print(len(binarylist))
 
 
     listPairs = []
@@ -265,70 +268,26 @@ def getInputs(key):
         for bit in initial_perm:
             plain_text_per.append(item[0][bit - 1])
 
-        # print((plain_text_per[32:]))
-        # print('ppalin permutate:')
-        # print((plain_text_per))
-        # print(showHex(plain_text_per[32:]))
         result_encrypt = encrypt(plain_text_per[32:], key)
 
         # permutate cipher text with inverse of final permutate
         cipher_text_inverse = []
         for bit in inverse_final_perm:
             cipher_text_inverse.append(item[1][bit - 1])
-        # print((cipher_text_inverse))
-        result_dycript = dycript(cipher_text_inverse, plain_text_per)
-        # print(showHex(result_dycript))
-        # print(showHex(result_encrypt))
+        result_dycript = reverse(cipher_text_inverse, plain_text_per)
         stringE = ''.join(chr(i + 48) for i in result_encrypt)
         stringD = ''.join(result_dycript)
         temp = [stringE, stringD]
         print(temp)
-        print("17 en:")
-        print(stringD[17])
-        print('4 is')
-        print(stringE[4])
-        print("7 is")
-        print(stringE[7])
 
         print("---------------------")
         listPairs.append(temp)
         inputs.append(stringE)
         outputs.append(stringD)
 
-    # print(inputs)
     p_box = find_p_box(inputs, outputs)
     print(p_box)
     return p_box
-
-    # init plain text
-    # plain_text = "kootahe"
-    # plain_text = pad_text(plain_text)
-    # plain_text_bin = ''.join(format(ord(i), '08b') for i in plain_text)
-
-    # Permutate plain text
-    # plain_text_per = []
-    # for bit in initial_perm:
-    #     plain_text_per.append(plain_text_bin[bit - 1])
-    # result_encrypt = encrypt(plain_text_per[32:], key)
-
-
-
-    # init cipher text
-    # cipher_text = "6E2F7B25307C3144"
-    # cipher_text_bin = ''.join(['{0:04b}'.format(int(d, 16)) for d in cipher_text])
-    # print(cipher_text_bin)
-
-    # calculate final permute inverse
-    # inverse_final_perm = invfinalperm()
-    #
-    # # permutate cipher text with inverse of final permutate
-    # cipher_text_inverse = []
-    # for bit in inverse_final_perm:
-    #     cipher_text_inverse.append(cipher_text_bin[bit - 1])
-    # result_dycript = dycript(cipher_text_inverse , plain_text_per)
-
-
-
 
 def showHex(text):
     binary_strp = ''.join(str(bit) for bit in text)
@@ -338,73 +297,40 @@ def showHex(text):
 def encrypt(plainRight, key):
     exp_perm = expansion_permutation(plainRight)
     resultXor = xor_lists(key, exp_perm)
-    # print("sbox plain:")
-    # print(exp_perm)
-    # print(key)
-    # print((resultXor))
-    # print("encrypt is : ")
-    # print((s_box(resultXor)))
     return s_box(resultXor)
-    # print(showHex(exp_perm))
-    # print(len(key))
 
 
-def dycript(cipherText, plainText):
-    # print("by")
-    # print((cipherText))
-    # print((plainText))
-    # print(showHex(cipherText))
-    # print(showHex(plainText))
+def reverse(cipherText, plainText):
     plainLeft = plainText[:32]
     cipherLeft = cipherText[:32]
-    # print(showHex(plainLeft))
-    # print(showHex(cipherLeft))
     resultXor = xor_lists(plainLeft, cipherLeft)
-    # print("dycript is :")
-    # print((resultXor))
     return resultXor
-    # print((plainLeft))
-    # print((cipherLeft))
-    # print((resultXor))
 
 def findPlain(pbox, cipher, key):
     blocks = textwrap.wrap(cipher, 16)
-    # print(blocks)
     result = ''
     for i in range(len(blocks)):
         bin = convertToBinaryC(blocks[i])
-        # print(bin)
         initialPer = []
         for bit in initial_perm:
             initialPer.append(bin[bit - 1])
-        # print(showHex(initialPer))
-        # print(showHex(initialPer[32:]))
         rightPart = initialPer[32:]
         resultSbox = encrypt(rightPart, key)
-        # print(resultSbox)
-        # print(pbox[12][0])
         straight = []
         for p in pbox:
             item = p[0]
             straight.append(resultSbox[item])
-        # print(straight)
         output_list = [str(bit) for bit in straight]
         leftPart = initialPer[:32]
-        # print("right is")
-        # print(output_list)
-        # print("left is")
-        # print(leftPart)
         xorLeftF = xor_lists(output_list, leftPart)
 
         concatLR = xorLeftF + rightPart
         plainBin = []
         for bit in final_perm:
             plainBin.append(concatLR[bit - 1])
-        # print(showHex(plainBin))
         string = ''
         for i in plainBin:
             string = string+i
-        # print(string)
         binary_string = ''.join(plainBin)
         hex = showHex(plainBin)
         if len(hex) < 16:
@@ -412,10 +338,8 @@ def findPlain(pbox, cipher, key):
             zero = ''
             for k in range(num):
                 zero = zero + '0'
-            # print(zero)
             hex = zero + hex
-        # print(hex)
-        # print(len(bytes.fromhex(hex).decode('utf-8')))
+
         result = result + (bytes.fromhex(hex).decode('utf-8'))
 
     last_byte = result[-1]
@@ -427,30 +351,12 @@ def findPlain(pbox, cipher, key):
 # initial key value
 key = '4355262724562343'
 givenCipher = '59346E29456A723B62354B61756D44257871650320277C741D1C0D0C4959590D'
+
 # convert key value to binary
 key_binary = bin(int(key, 16))[2:].zfill(64)
 
-# char_list = [c for c in key_binary]
-# print("k")
-# print(char_list)
 # generate round 1 key
 round1_key = generate_round_key(list(key_binary))  # Generate round keys
-# print("round 1 key :")
-# print(round1_key)
+
 straightPbox = getInputs(round1_key)
 findPlain(straightPbox, givenCipher, round1_key)
-
-# print(plain_text_per)
-
-# Inverse cipher text final permutate
-# Inverse final_permutate box
-
-
-# binary_strp = ''.join(str(bit) for bit in plain_text_per)
-# hex_strp = hex(int(binary_strp, 2))[2:]
-#
-# binary_strc = ''.join(str(bit) for bit in cipher_text_inverse)
-# hex_strc = hex(int(binary_strc, 2))[2:]
-#
-# print(hex_strp , hex_strc)
-# print("hiii")
