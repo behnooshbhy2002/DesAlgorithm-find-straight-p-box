@@ -1,3 +1,7 @@
+# Behnoosh Behyani 993613012
+# Kasra Samadi 993623030
+# CRYPTOGRAPHY AND NETWORK SECURITY PROJECT
+
 import textwrap
 
 # parity bit drop for 64-bit key
