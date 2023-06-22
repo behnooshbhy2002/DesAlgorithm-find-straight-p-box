@@ -110,10 +110,26 @@ def generate_round_key(key):
     return round1_key
 
 
+def convertToBinaryP(text):
+    bin = ''.join(format(ord(i), '08b') for i in text)
+    return bin
+
+
+def convertToBinaryC(Hex):
+    bin = ''.join(['{0:04b}'.format(int(d, 16)) for d in Hex])
+    return bin
+
+
 def pad_text(text):
     padding_length = 8 - (len(text) % 8)
     padding = chr(padding_length) * padding_length
     return text + padding
+
+
+def showHex(text):
+    binary_strp = ''.join(str(bit) for bit in text)
+    hex_strp = hex(int(binary_strp, 2))[2:]
+    return hex_strp
 
 
 def invfinalperm():
@@ -153,16 +169,6 @@ def s_box(input):
     return result
 
 
-def convertToBinaryP(text):
-    bin = ''.join(format(ord(i), '08b') for i in text)
-    return bin
-
-
-def convertToBinaryC(Hex):
-    bin = ''.join(['{0:04b}'.format(int(d, 16)) for d in Hex])
-    return bin
-
-
 def find_p_box(inputs, outputs):
 
     list = [[[]]]
@@ -184,8 +190,8 @@ def find_p_box(inputs, outputs):
                 tempList.append(listOne)
         list_indexs.append(tempList)
 
-    for item in list_indexs:
-        print(item)
+    # for item in list_indexs:
+    #     print(item)
 
     listSub = list_indexs[0]
 
@@ -222,6 +228,7 @@ def getInputs(key):
             ]
     removeIndex = []
     counter = 0
+    # blocking plain text and cipher text
     for item in list:
         if len(item[1]) > 16:
             removeIndex.append(counter)
@@ -235,9 +242,9 @@ def getInputs(key):
                 c = blocksCipher[i]
                 test = [p, c]
                 list.append(test)
-            # print(list)
     for remove in removeIndex:
         list.pop(remove)
+
     #convert list to binary form
     binarylist = []
     for item in list:
@@ -252,12 +259,6 @@ def getInputs(key):
         tempList = [binP, binC]
         binarylist.append(tempList)
         counter += 1
-    # print(len(list))
-    # print(len(binarylist))
-    # for remove in removeIndex:
-    #     binarylist.pop(remove)
-    # print(len(binarylist))
-
 
     listPairs = []
     inputs = []
@@ -275,24 +276,17 @@ def getInputs(key):
         for bit in inverse_final_perm:
             cipher_text_inverse.append(item[1][bit - 1])
         result_dycript = reverse(cipher_text_inverse, plain_text_per)
+
         stringE = ''.join(chr(i + 48) for i in result_encrypt)
         stringD = ''.join(result_dycript)
-        temp = [stringE, stringD]
-        print(temp)
-
-        print("---------------------")
-        listPairs.append(temp)
         inputs.append(stringE)
         outputs.append(stringD)
 
     p_box = find_p_box(inputs, outputs)
-    print(p_box)
+    # print(p_box)
     return p_box
 
-def showHex(text):
-    binary_strp = ''.join(str(bit) for bit in text)
-    hex_strp = hex(int(binary_strp, 2))[2:]
-    return hex_strp
+
 
 def encrypt(plainRight, key):
     exp_perm = expansion_permutation(plainRight)
