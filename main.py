@@ -171,15 +171,15 @@ def s_box(input):
 
 def find_p_box(inputs, outputs):
 
-    list = [[[]]]
-    list_indexs = []
+    list_index = []
     for i in range(len(outputs)):
         out = outputs[i]
+        input = inputs[i]
         tempList = []
         listZero = []
         listOne = []
-        for j in range(len(out)):
-            if inputs[i][j] == '0':
+        for j in range(len(input)):
+            if input[j] == '0':
                 listZero.append(j)
             else:
                 listOne.append(j)
@@ -188,19 +188,19 @@ def find_p_box(inputs, outputs):
                 tempList.append(listZero)
             else:
                 tempList.append(listOne)
-        list_indexs.append(tempList)
+        list_index.append(tempList)
 
     # for item in list_indexs:
     #     print(item)
 
-    listSub = list_indexs[0]
+    listSub = list_index[0]
 
-    for i in range(len(list_indexs)-1):
+    for i in range(len(list_index)-1):
         ll = []
-        for j in range(len(list_indexs[i+1])):
+        for j in range(len(list_index[i+1])):
             sub = []
             for element in set(listSub[j]):
-                if element in set(list_indexs[i+1][j]):
+                if element in set(list_index[i+1][j]):
                     sub.append(element)
             ll.append(sub)
 
@@ -226,41 +226,36 @@ def getInputs(key):
              ["05753jj", "B1203330722B7A04"],
              ["==j95697","38693B6824232D231D1C0D0C4959590D"]
             ]
-    removeIndex = []
+    remove_index = []
     counter = 0
     # blocking plain text and cipher text
     for item in list:
         if len(item[1]) > 16:
-            removeIndex.append(counter)
-            blocksPlain = textwrap.wrap(item[0], 8)
-            blocksCipher = textwrap.wrap(item[1], 16)
-            num = len(blocksCipher)
+            remove_index.append(counter)
+            blocks_plain = textwrap.wrap(item[0], 8)
+            blocks_cipher = textwrap.wrap(item[1], 16)
+            num = len(blocks_cipher)
             for i in range(num):
                 p = ''
-                if len(blocksPlain) > i:
-                    p = blocksPlain[i]
-                c = blocksCipher[i]
+                if len(blocks_plain) > i:
+                    p = blocks_plain[i]
+                c = blocks_cipher[i]
                 test = [p, c]
                 list.append(test)
-    for remove in removeIndex:
+    for remove in remove_index:
         list.pop(remove)
 
     #convert list to binary form
     binarylist = []
     for item in list:
-        if len(item[0]) < 8:
-            plainPad = pad_text(item[0])
-        elif len(item[0]) >= 8:
-            item[0] = item[0][:8]
-            plainPad = item[0]
 
-        binP = convertToBinaryP(plainPad)
-        binC = convertToBinaryC(item[1])
-        tempList = [binP, binC]
-        binarylist.append(tempList)
-        counter += 1
+        plain_pad = pad_text(item[0])
+        bin_p = convertToBinaryP(plain_pad)
 
-    listPairs = []
+        bin_c = convertToBinaryC(item[1])
+        temp_list = [bin_p, bin_c]
+        binarylist.append(temp_list)
+
     inputs = []
     outputs = []
     for item in binarylist:
@@ -275,12 +270,13 @@ def getInputs(key):
         cipher_text_inverse = []
         for bit in inverse_final_perm:
             cipher_text_inverse.append(item[1][bit - 1])
-        result_dycript = reverse(cipher_text_inverse, plain_text_per)
+        result_inverse = reverse(cipher_text_inverse, plain_text_per)
 
-        stringE = ''.join(chr(i + 48) for i in result_encrypt)
-        stringD = ''.join(result_dycript)
-        inputs.append(stringE)
-        outputs.append(stringD)
+        string_input_pbox = ''.join(chr(i + 48) for i in result_encrypt)
+        string_output_pbox = ''.join(result_inverse)
+
+        inputs.append(string_input_pbox)
+        outputs.append(string_output_pbox)
 
     p_box = find_p_box(inputs, outputs)
     # print(p_box)
@@ -322,10 +318,10 @@ def findPlain(pbox, cipher, key):
         plainBin = []
         for bit in final_perm:
             plainBin.append(concatLR[bit - 1])
-        string = ''
-        for i in plainBin:
-            string = string+i
-        binary_string = ''.join(plainBin)
+        # string = ''
+        # for char in plainBin:
+        #     string = string+char
+        # binary_string = ''.join(plainBin)
         hex = showHex(plainBin)
         if len(hex) < 16:
             num = 16 - len(hex)
